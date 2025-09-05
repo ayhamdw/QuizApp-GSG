@@ -1,7 +1,21 @@
 import questions from "./data.js";
-class LocalStorage {
-    constructor(key = 'quiz_answers') {
+class BaseStorage {
+    constructor(key) {
         this.storageKey = key;
+    }
+    save(data) {
+        throw new Error("Method save must be implemented.");
+    }
+    load() {
+        throw new Error("Method load must be implemented.");
+    }
+    clear() {
+        throw new Error("Method clear must be implemented.");
+    }
+}
+class LocalStorage extends BaseStorage {
+    constructor(key = 'palestine_quiz') {
+        super(key);
     }
     save(data) {
         localStorage.setItem(this.storageKey, JSON.stringify(data));
@@ -58,12 +72,10 @@ class QuizUI {
     }
     render() {
         this.container.innerHTML = '';
-        
         this.quiz.questions.forEach((q, index) => {
             const questionDiv = this.createQuestionElement(q, index);
             this.container.appendChild(questionDiv);
         });
-
         this.attachEventListeners();
     }
     createQuestionElement(question, index) {
@@ -81,7 +93,6 @@ class QuizUI {
                 `).join('')}
             </div>
         `;
-
         return questionDiv;
     }
     attachEventListeners() {
@@ -98,7 +109,6 @@ class QuizUI {
         const score = this.quiz.calculateScore();
         const percentage = this.quiz.getPercentage();
         const passed = this.quiz.isPassed();
-
         this.resultContainer.innerHTML = `
             <div class="result ${passed ? 'pass' : 'fail'}">
                 <h3>Quiz Results</h3>
@@ -106,8 +116,8 @@ class QuizUI {
                 <p>${passed ? 'Congratulations! You Passed!' : 'Sorry, you need 70% to pass. Try again!'}</p>
             </div>
         `;
-
         this.disableInputs();
+        this.quiz.storage.clear();
     }
     disableInputs() {
         document.querySelectorAll('input[type="radio"]').forEach(input => {
@@ -133,11 +143,9 @@ class QuizApp {
     attachButtonEvents() {
         const submitBtn = document.querySelector('.submit-btn');
         const resetBtn = document.querySelector('.reset-btn');
-
         if (submitBtn) {
             submitBtn.addEventListener('click', () => this.handleSubmit());
         }
-
         if (resetBtn) {
             resetBtn.addEventListener('click', () => this.handleReset());
         }
